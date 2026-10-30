@@ -31,7 +31,7 @@ curl http://localhost:3000/events
 
 Validation requires a title with visible text and ISO 8601 timestamps. `endsAt` must follow `startsAt`. An overlapping event returns HTTP `409`. Events are written to `data/events.json`; set `SCHEDULING_DATA_FILE` to choose another file. Run one server process for this version.
 
-Run `npm test` for persistence, rescheduling, and conflict checks. GitHub Actions audits dependencies, builds and tests the API, and builds its Docker image on each push.
+Run `npm test` for persistence, rescheduling, validation, and HTTP conflict checks. The HTTP test starts the API on a temporary local port. GitHub Actions audits dependencies, builds and tests the API, and builds its Docker image on each push.
 
 The Dockerfile runs the same API. Use a named volume to retain events after replacing the container:
 
