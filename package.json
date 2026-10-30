@@ -6,7 +6,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
-    "test": "npm run build && node --test dist/events.service.test.js"
+    "test": "npm run build && node --test dist/events.service.test.js dist/events.http.test.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.3.2",
