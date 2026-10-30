@@ -7,4 +7,7 @@ export class CreateEventDto {
 
   @IsDateString()
   startsAt!: string;
+
+  @IsDateString()
+  endsAt!: string;
 }
