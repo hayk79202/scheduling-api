@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { EventsService } from './events.service';
 
-test('events persist, reload, reject overlaps, and delete', () => {
+test('events persist, reschedule, reject overlaps, and delete', () => {
   const directory = mkdtempSync(join(tmpdir(), 'scheduling-api-'));
   const previous = process.env.SCHEDULING_DATA_FILE;
   process.env.SCHEDULING_DATA_FILE = join(directory, 'events.json');
@@ -30,7 +30,25 @@ test('events persist, reload, reject overlaps, and delete', () => {
       startsAt: '2026-11-01T11:00:00.000Z',
       endsAt: '2026-11-01T10:00:00.000Z',
     }), BadRequestException);
+    const next = service.create({
+      title: 'Planning',
+      startsAt: '2026-11-01T12:00:00.000Z',
+      endsAt: '2026-11-01T13:00:00.000Z',
+    });
+    const moved = service.update(event.id, {
+      title: 'Design review moved',
+      startsAt: '2026-11-01T11:00:00.000Z',
+      endsAt: '2026-11-01T12:00:00.000Z',
+    });
+    assert.equal(moved.title, 'Design review moved');
+    assert.equal(new EventsService().get(event.id).startsAt, moved.startsAt);
+    assert.throws(() => service.update(event.id, {
+      title: 'Bad move',
+      startsAt: '2026-11-01T12:30:00.000Z',
+      endsAt: '2026-11-01T13:30:00.000Z',
+    }), ConflictException);
     service.remove(event.id);
+    service.remove(next.id);
     assert.equal(new EventsService().list().length, 0);
   } finally {
     if (previous === undefined) delete process.env.SCHEDULING_DATA_FILE;

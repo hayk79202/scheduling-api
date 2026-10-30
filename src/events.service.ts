@@ -31,23 +31,37 @@ export class EventsService {
     return [...this.events.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   }
 
-  create(input: CreateEventDto): Event {
+  private buildEvent(id: string, input: CreateEventDto): Event {
+    const title = input.title.trim();
+    if (!title) throw new BadRequestException('title must contain visible text');
     const start = Date.parse(input.startsAt);
     const end = Date.parse(input.endsAt);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       throw new BadRequestException('endsAt must be after startsAt');
     }
     const overlaps = [...this.events.values()].some(
-      (event) => start < Date.parse(event.endsAt) && end > Date.parse(event.startsAt),
+      (event) => event.id !== id && start < Date.parse(event.endsAt) && end > Date.parse(event.startsAt),
     );
     if (overlaps) throw new ConflictException('Time overlaps an existing event');
-    const event = {
-      id: randomUUID(),
-      title: input.title.trim(),
+    return {
+      id,
+      title,
       startsAt: new Date(start).toISOString(),
       endsAt: new Date(end).toISOString(),
     };
+  }
+
+  create(input: CreateEventDto): Event {
+    const event = this.buildEvent(randomUUID(), input);
     this.events.set(event.id, event);
+    this.persist();
+    return event;
+  }
+
+  update(id: string, input: CreateEventDto): Event {
+    this.get(id);
+    const event = this.buildEvent(id, input);
+    this.events.set(id, event);
     this.persist();
     return event;
   }
